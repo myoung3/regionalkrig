@@ -1,4 +1,5 @@
 #setwd("C:/Users/micha/Documents/git/regionalkrig")
+#setwd("C:\\LocalDataAmanda\\git_repo\\regionalkrig")
 
 #install.packages(c("SpatioTemporal","corpcor","data.table","geoR","maps","mvtnorm","pls","deldir","ggplot2","mapproj", "devtools","roxygen2"))
 
