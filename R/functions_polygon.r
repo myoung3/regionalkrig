@@ -1,4 +1,13 @@
 
+#' Polygon clipping
+#'
+#' A function for limiting the points to being within a certain polygon?  Returns a matrix of the (x, y) coordinates of points within the polygon.
+#' @param xpoly A matrix of the (x, y) coordinates that are the vertices of the clipping polygon.  Assumes first point = last point.
+#' @param xtest A matrix of the (x, y) coordinates of the candidate points
+#' @keywords 
+#' @export
+#' @examples 
+
 poly.int2 <- function(xpoly,xtest) {
   # xtest is the mx2 array of points to be tested.
   # xpoly is an nx2 array of points defining the polygon,

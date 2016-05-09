@@ -1,5 +1,19 @@
 
 
+#' Function for Running a Full Model
+#'
+#' Function for running a full model. 
+#' @param rawdata A data.frame of the rawdata, which must include the following columns: pollutant_conc,location_id,native_id,latitude,longitude,monitor_type. Defaults to NULL.  This will terminate the function call.  
+#' @param desc.vars A vector of ?
+#' @param pls.comps An integer between 1 and 5 indicating the number of PLS components.
+#' @param UK.varnames Defaults to NULL.  This will?
+#' @param factr Defaults to 1e9.
+#' @param verbose Defaults to FALSE.  This will?
+#' @param regional Defaults to TRUE.  This will?
+#' @keywords 
+#' @examples
+#' @return A list containing a lot of stuff?
+#' @export
 
 PLSK.full <- function(rawdata, desc.vars, pls.comps,UK.varnames=NULL, factr=1e9, verbose=FALSE,regional=TRUE){
   

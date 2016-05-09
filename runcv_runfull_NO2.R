@@ -4,18 +4,6 @@
 #install.packages(c("SpatioTemporal","corpcor","data.table","geoR","maps","mvtnorm","pls","deldir","ggplot2","mapproj", "devtools","roxygen2"))
 
 
-library(data.table)
-library(geoR)
-library(maps)
-#library(mvtnorm)
-#library(pls)
-#library(SpatioTemporal)
-library(corpcor)
-library(data.table)
-
-
-
-
 #
 
 # regional definitions east.polygon and weco.polygon
