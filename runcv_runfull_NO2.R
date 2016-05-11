@@ -17,7 +17,8 @@ load_all()
 
 
 
-DR0119 <- init.DR0119() #generate a function that reads in DR0119
+DR0119 <- init.dr(reqnum = "DR0119", poll_list="NO2") #generate a function that reads in DR0119
+DR0119 <- init.dr(reqnum = "dr0250", poll_list="NO2", dataloc = "Q:/eac_database/requests/") #generate a function that reads in DR0119
 #why not just read in DR0119? This is more efficient:
 #it reads in the dataset once, stores the data in the environment of the DR0119 function
 #then DR0119 alows you to select subsets of that dataset without rereading it each time
@@ -37,7 +38,7 @@ vardrop <- c("m_to_truck", "m_to_oil", "m_to_6oil", "m_to_main_cityhall", "m_to_
 pollutant <- "NO2" #this is just an input to my dataread function
 
 
-yearparam <- 2000:2001 #input to my dataread function
+yearparam <- 2010:2014 #input to my dataread function
 
 
 rawdata.l <- lapply(yearparam, DR0119, pollutant=pollutant, vardrop=vardrop, LID_drop=LID_drop,randomsample=NULL)  #read in the data using the data-read function DR0119
