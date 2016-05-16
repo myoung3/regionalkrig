@@ -1,4 +1,16 @@
 
+#' Make Region Design
+#'
+#' Make region design
+#' @param my.object An object containing ?
+#' @param region.vector A vector indicating which region each location belongs to (Note: should this be optional?)
+#' @param my.pls.comps Integer indicating the number of pls components
+#' @param all.regions A vector of character strings listing all the regions
+#' @keywords 
+#' @export
+#' @return A matrix with monitor names as rownames and number of columns = numer of regions * (number of UK covars + Number of PLS components)
+#' @examples 
+
 make_reg_design <- function(my.object, region.vector, my.pls.comps, all.regions=c('east', 'weco', 'west'))
 {
   my.pls.comps <- as.integer(my.pls.comps)
@@ -29,6 +41,19 @@ make_reg_design <- function(my.object, region.vector, my.pls.comps, all.regions=
 #====================================================#
 # returns a design matrix with national coefficients #
 #====================================================#
+
+#' Design matrix with national coefficients
+#'
+#' Make design matrix with national coefficients
+#' @param my.object An object containing ?
+#' @param region.vector A vector indicating which region each location belongs to (Note: should this be optional?)
+#' @param my.pls.comps Integer indicating the number of pls components
+#' @return A matrix with monitor names as rownames and number of columns = numer of regions * (number of UK covars + Number of PLS components)
+#' @keywords 
+#' @export
+#' @examples 
+
+
 make_nat_design_old <- function(my.object, region.vector, my.pls.comps)
 {
  stop()
@@ -51,6 +76,16 @@ make_nat_design <- function(my.object, region.vector, my.pls.comps)
 # to which region each monitor is in           #
 # aka v.hash                                   #
 #==============================================#
+
+#' Make regional vector
+#'
+#' Make regional vector
+#' @param my.object An object containing ?
+#' @return A matrix with monitor names as rownames and number of columns = numer of regions * (number of UK covars + Number of PLS components)
+#' @keywords 
+#' @export
+#' @examples 
+
 make_reg_vector <- function(my.object)
 {
   the.regions <- c(rep(NA, my.object$obs))
@@ -66,6 +101,16 @@ make_reg_vector <- function(my.object)
 # returns a vector with all elements #
 # set to be one region, namely 'all' #
 #====================================#
+
+#' National vector
+#'
+#' Make national vector
+#' @param my.object An object containing ?
+#' @return A vector of the regions, indicated by 'all'
+#' @keywords 
+#' @export
+#' @examples 
+
 make_nat_vector <- function(my.object)
 {
   the.regions <- rep('all', my.object$obs)

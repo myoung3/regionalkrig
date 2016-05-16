@@ -1,6 +1,16 @@
 #================================
 #CREATE EXPONENTIAL COVARIANCE MATRIX
 #================================
+
+#' Create an exponential covariance matrix
+#'
+#' Create an exponential covariace matrix, based on the distance between locations
+#' @param coords A matrix of x, y coordinates
+#' @param l.pars ??
+#' @keywords 
+#' @export
+#' @examples 
+
 varcov.eff <- function(coords, l.pars)
 {
   eye <- diag(1,nrow(coords))
@@ -13,6 +23,17 @@ varcov.eff <- function(coords, l.pars)
 #=========================================
 #Block diagonal spatial covariance matrix:
 #=========================================
+
+#' Block diagonal spatial covariance matrix
+#'
+#' Creates a block diagonal spatial covariance matrix
+#' @param l.pars ?
+#' @param coords A matrix of x, y coordinates
+#' @param reg.ind A vector indicating which region each location belongs to (Note: should this be optional?)
+#' @keywords 
+#' @export
+#' @examples 
+
 block.Sig <- function(l.pars, coords, reg.ind)
 {
   coords <- coords[order(reg.ind),]
@@ -34,6 +55,19 @@ block.Sig <- function(l.pars, coords, reg.ind)
 #====================
 #PROFILE LIKELIHOOD
 #====================
+
+#' Profile Likelihood
+#'
+#' Creates a block diagonal spatial covariance matrix
+#' @param l.pars
+#' @param X
+#' @param coords A matrix of x, y coordinates
+#' @param reg.ind A vector indicating which region each location belongs to (Note: should this be optional?)
+#' @param data
+#' @keywords 
+#' @export
+#' @examples 
+
 prof.lik <- function(l.pars, X, coords, reg.ind, data)
 {
   m.mat <- model.matrix(~ -1 + as.matrix(X))
@@ -52,6 +86,19 @@ prof.lik <- function(l.pars, X, coords, reg.ind, data)
 #FUNCTION TO INFER BETA FROM 
 #MAXIMIZED COV PARS
 #==============================
+
+#' Infer Beta from Maximized Covariance Parameters
+#'
+#' Infer Beta from Maximized Covariance Parameters
+#' @param l.pars
+#' @param X
+#' @param coords A matrix of x, y coordinates
+#' @param reg.ind A vector indicating which region each location belongs to (Note: should this be optional?)
+#' @param data
+#' @keywords 
+#' @export
+#' @examples 
+
 inf.beta<- function(l.pars, X, coords, reg.ind, data)
 {
   # to be sure, reorder by reg.ind as done elsewhere for block operations
