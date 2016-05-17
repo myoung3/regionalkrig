@@ -8,8 +8,9 @@
 #' Variable Screening: Sufficient variability
 #'
 #' A function that screens out covariates with too little variability (10th percentile == 90th percentile)
-#' @param my.data 
-#' @param my.all.vars
+#' @param my.data See rawdata under PLSK.full
+#' @param my.all.vars String vector listing candidate variables; often, rownames(my.data)
+#' @return String vector listing variables that failed the cleaning check
 #' @keywords 
 #' @export
 #' @examples 
@@ -30,8 +31,9 @@ fail_quantile_check <- function(my.data, my.all.vars)
 #' Variable Screening: Skewness
 #'
 #' A function that screens out covariates that have extremely skewed distributions (maximum normalized value > 10).  Note: -10, too?
-#' @param my.data 
-#' @param my.all.vars
+#' @param my.data See rawdata under PLSK.full
+#' @param my.all.vars String vector listing candidate variables; often, rownames(my.data)
+#' @return String vector listing variables that failed the cleaning check
 #' @keywords 
 #' @export
 #' @examples 
@@ -51,9 +53,11 @@ fail_skewed_distro <- function(my.data, my.all.vars)
 
 #' Variable Screening: Rare land use types
 #'
-#' A function that screens out land use that never makes up more than 10% of the buffer area
-#' @param my.data 
-#' @param my.all.vars
+#' A function that screens out land use that never makes up more than 10% of the buffer area.  Searches my.all.vars for 
+#' variable names that start with "lu_".
+#' @param my.data See rawdata under PLSK.full
+#' @param my.all.vars String vector listing candidate variables; often, rownames(my.data)
+#' @return String vector listing variables that failed the cleaning check
 #' @keywords 
 #' @export
 #' @examples 
@@ -75,8 +79,9 @@ fail_low_landuse <- function(my.data, my.all.vars)
 #' Variable Screening: All values are zero
 #'
 #' A function that screens out variables that are 0 for all points
-#' @param my.data 
-#' @param my.all.vars
+#' @param my.data See rawdata under PLSK.full
+#' @param my.all.vars String vector listing candidate variables; often, rownames(my.data)
+#' @return String vector listing variables that failed the cleaning check
 #' @keywords 
 #' @export
 #' @examples 

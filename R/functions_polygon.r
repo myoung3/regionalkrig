@@ -4,6 +4,7 @@
 #' A function for limiting the points to being within a certain polygon?  Returns a matrix of the (x, y) coordinates of points within the polygon.
 #' @param xpoly A matrix of the (x, y) coordinates that are the vertices of the clipping polygon.  Assumes first point = last point.
 #' @param xtest A matrix of the (x, y) coordinates of the candidate points
+#' @return A matrix of the (x, y) coordinates of points within the polygon.
 #' @keywords 
 #' @export
 #' @examples 

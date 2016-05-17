@@ -16,7 +16,32 @@
 # maximized log-likelihood; indicator of positive definite hessian, if hess=TRUE
 #======================================================================================
 #======================================================================================
-my.likfit <- function(ini.l.pars, X, coords, reg.ind, data, hess=TRUE, trace=0,factr=1e7)
+#' Likelihood Function for Regional Variograms
+#'
+#' Likelihood function for regional variograms
+#' @param ini.l.pars  Length 3xR vector of initial (log) starting values for the covariance
+#'   parameters, where "R" is the number of distinct regions; order of starting values
+#'   should be e.g. c(tau1,sigma1,rho1,tau2,sigma2,rho2,tau3,sigma3,rho3)
+#' @param X Matrix of kriging covariates (in our case, PLS scores)
+#' @param coords Nx2 matrix of coordinates
+#' @param reg.ind N-vector of distinct kriging regions.  For traditional UK, set reg.ind = rep(1,N)
+#' @param data Monitor pollutant exposures
+#' @param hess Logical; whether or not to compute hessian and test whether it is positive-definite.  Defaults to TRUE.
+#'   A positive-definite hessian is a good indicator that true log-likelihood max has been found
+#' @param trace Numeric, 0 by default
+#' @param factr Numeric, 1e7 by default
+#' @details Calls inf.beta and optim
+#' @return List containing maximized log-covariance parameters; kriging regression covariates;
+#'   maximized log-likelihood; indicator of positive definite hessian, if hess=TRUE
+#' \describe{
+#'   \item{log.cov.pars}{List of vector of named numbers; includes tau, sigma and rho for each region. Maximized log-covariance parameters?}
+#'   \item{beta}{Matrix (instead of vector?) intercept and betas (b1 and b2?) for each region. The kriging regression covariates?}
+#'   \item{max.log.lik}{Numeric; the maximized log-likelihood}
+#'   \item{hess.pd}{Boolean indicating whether the hessian was positive definite}
+#'   \item{hessian}{A [3xR]x[3xR] matrix which is the Hessian.}
+#' }
+
+my.likfit <- function(ini.l.pars, X, coords, reg.ind, data, hess=TRUE, trace=0, factr=1e7)
 {
   X <- X[order(reg.ind),]
   coords <- coords[order(reg.ind),]
@@ -53,6 +78,24 @@ my.likfit <- function(ini.l.pars, X, coords, reg.ind, data, hess=TRUE, trace=0,f
 #===============================
 # AUXILIARY FUNCTION FOR c.exp()
 #===============================
+
+#' Auxiliary function for c.exp()
+#'
+#' Auxiliary function for c.exp()
+#' @param reg.dat data
+#' @param dim.X ncol(X.all)
+#' @param beta likfit.obj$beta
+#' @param log.cov.pars log.cov.pars[(3*j-2):(3*j)]
+#' @details 
+#' @return N x 2 matrix, where N is the number of prediction locations;
+#'   1st column contains predictions, 2nd column contains prediction variances
+#' \describe{
+#'   \item{mp.ind}{stuff}
+#'   \item{y.all}{stuff}
+#'   \item{v.all}{stuff}
+#' }
+
+
 k.pred <- function(reg.dat,dim.X,beta,log.cov.pars)
 {
   #browser()
@@ -92,6 +135,25 @@ k.pred <- function(reg.dat,dim.X,beta,log.cov.pars)
 # 1st column contains predictions, 2nd column contains prediction variances
 #=======================================================================
 #=======================================================================
+
+#' Function to compute conditional expectation (i.e. make predictions)
+#'
+#' Function to compute conditional expectation (i.e. make predictions)
+#' @param likfit.obj Object output from my.likfit()
+#' @param X.mon Covariates (i.e., PLS scores) for monitors
+#' @param coords.mon Monitor coordinates
+#' @param reg.mon Vector of regions for monitors
+#' @param y Monitor pollutant concentrations
+#' @param X.pred Covariates (i.e., PLS scores) for prediction locations
+#' @param coords.pred Prediction coordinates
+#' @param reg.pred Vector of regions for prediction sites
+#' @details 
+#' @return N x 2 matrix, where N is the number of prediction locations;
+#'   1st column contains predictions, 2nd column contains prediction variances
+#' \describe{
+#'   \item{predictions}{Predictions}
+#'   \item{pred.var}{Prediction variances}
+#' }
 
 c.exp <- function(likfit.obj,
                   X.mon, coords.mon, reg.mon, y,
