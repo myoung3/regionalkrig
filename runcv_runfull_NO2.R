@@ -76,4 +76,10 @@ NO2test.full <- lapply(rawdata.l, function(.rawdata){
 })
 
 
+###########Run One CV
+test1 <- runfull(pls=2, rawdata=rawdata.l[[5]], desc.vars=desc.vars, UK.varnames=NULL)
+test2 <- runcv(pls=2, rawdata=rawdata.l[[5]], manual.cv=NULL, desc.vars=desc.vars, UK.varnames=NULL)
+test3 <- PLSK.cv.alt(pls.comps=2, rawdata=rawdata.l[[5]], manual.cv=NULL, desc.vars=desc.vars, UK.varnames=NULL)
+
+
 

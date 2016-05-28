@@ -10,6 +10,7 @@
 #' @param factr Defaults to 1e9.
 #' @param verbose Defaults to FALSE.  This will?
 #' @param regional Defaults to TRUE.  This will?
+#' @param clean.data Boolean indicating whether to apply data cleaning functions.  Defaults to TRUE.
 #' @details This is one of the workhorse functions of this package.
 #' By default, distance variables are log-transformed.  Geographic variables are screened for sufficient variability, etc. and other stuff I'll specify later.
 #' The function is expecting something like the following to be in the rawdata object:
@@ -93,19 +94,19 @@
 #' @section To Do List:
 #' I'm adding this section as a place to track things we might want to do as improvements
 #' \describe{
-#'   \item{}{}
+#'   \item{Hard-coded region parameters}{Re-work for flexible regions}
 #' }
 #' @keywords 
 #' @examples
 #' @export
 
-PLSK.full <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, factr=1e9, verbose=FALSE, regional=TRUE){
+PLSK.full <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, factr=1e9, verbose=FALSE, regional=TRUE, clean.data=TRUE){
   
-  invars <- names(rawdata) 
-  pls.comps <-   as.integer(pls.comps)
+  invars    <- names(rawdata) 
+  pls.comps <- as.integer(pls.comps)
   if(pls.comps > 5) stop("PLS components must be <= 5. this is hardcoded somewhere. can be changed if necessary")
   pollutant <- attr(rawdata, "pollutant")
-  year <- attr(rawdata, "year")
+  year      <- attr(rawdata, "year")
   if(is.null(pollutant) | is.null(year)){
 	warning("attr(rawdata,'pollutant') or attr(rawdata, 'year') is null. 
 		If you set these values manually prior to modeling, 
@@ -125,6 +126,8 @@ PLSK.full <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, factr=1e9
 	cat("rawdata contains", sum(as.logical(colSums(miss))), "columns with missing values.\n")
 	stop("remove missing columns or rows prior to modeling")
   }
+
+  ## DATA CLEANING ##
   
   rawdata <- log_transform_distances_dt(rawdata, desc.vars=desc.vars)
   rawdata <- combine_a23_ll_dt(rawdata,desc.vars=desc.vars)
@@ -137,13 +140,18 @@ PLSK.full <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, factr=1e9
   # Variable screening
   all.vars <- colnames(rawdata)[! colnames(rawdata) %in% desc.vars]
   exclude.vars <- desc.vars
-  exclude.vars <- c(exclude.vars, fail_quantile_check(rawdata, all.vars))
-  exclude.vars <- c(exclude.vars, fail_skewed_distro(rawdata, all.vars))
-  exclude.vars <- c(exclude.vars, fail_low_landuse(rawdata, all.vars))
-  exclude.vars <- c(exclude.vars, fail_non_zero(rawdata, all.vars))
-  exclude.vars <- c(exclude.vars,c("lambert_x","lambert_y"))
+  if (clean.data){
+    exclude.vars <- c(exclude.vars, fail_quantile_check(rawdata, all.vars))
+    exclude.vars <- c(exclude.vars, fail_skewed_distro(rawdata, all.vars))
+    exclude.vars <- c(exclude.vars, fail_low_landuse(rawdata, all.vars))
+    exclude.vars <- c(exclude.vars, fail_non_zero(rawdata, all.vars))
+    exclude.vars <- c(exclude.vars,c("lambert_x","lambert_y"))
+  }
   exclude.vars <- unique(exclude.vars)
   exclude.vars <- exclude.vars[exclude.vars %in% colnames(rawdata)]
+
+ 
+  ## END DATA CLEANING ##
 
   if(!is.null(UK.varnames)) if(any(UK.varnames %in% exclude.vars)){
 	stop("variable/s ", instersect(UK.varnames,exclude.vars), " have been excluded, probably due to failing cleaning checks")
@@ -201,5 +209,6 @@ PLSK.full <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, factr=1e9
                                            'west_sigma',
                                            'west_rho')
   }
+  #rm(c("invars", "ini.l.pars"))
   as.list(environment())
 }

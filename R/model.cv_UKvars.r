@@ -15,6 +15,7 @@
 #' @param my.segments Integer; number of segments?
 #' @param regional Boolean indicating whether model is regional.  Defaults to TRUE.
 #' @param kriging Boolean indicating whether to krig residuals.  Defaults to TRUE.
+#' @param clean.data Boolean indicating whether to apply data cleaning functions.  Defaults to TRUE.
 #' @return
 #' @section To Do List:
 #' I'm adding this section as a place to track things we might want to do as improvements
@@ -26,7 +27,8 @@
 #' @examples 
 
 PLSK.cv <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, 
-                    manual.cv=NULL, factr=1e9, verbose=FALSE, my.segments=10, regional=TRUE, kriging=TRUE){
+                    manual.cv=NULL, factr=1e9, verbose=FALSE, my.segments=10, regional=TRUE, kriging=TRUE,
+                    clean.data=TRUE){
   invars <- names(rawdata)
   pls.comps <-   as.integer(pls.comps)
   pollutant <- attr(rawdata, "pollutant")
@@ -119,11 +121,13 @@ PLSK.cv <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL,
 
     all.vars <- colnames(cv.rawdata)[! colnames(cv.rawdata) %in% desc.vars]
     exclude.vars <- desc.vars
-    exclude.vars <- c(exclude.vars, fail_quantile_check(cv.rawdata, all.vars))
-    exclude.vars <- c(exclude.vars, fail_skewed_distro(cv.rawdata, all.vars))
-    exclude.vars <- c(exclude.vars, fail_low_landuse(cv.rawdata, all.vars))
-    exclude.vars <- c(exclude.vars, fail_non_zero(cv.rawdata, all.vars))
-    exclude.vars <- c(exclude.vars,c("lambert_x","lambert_y"))
+    if (clean.data){
+      exclude.vars <- c(exclude.vars, fail_quantile_check(cv.rawdata, all.vars))
+      exclude.vars <- c(exclude.vars, fail_skewed_distro(cv.rawdata, all.vars))
+      exclude.vars <- c(exclude.vars, fail_low_landuse(cv.rawdata, all.vars))
+      exclude.vars <- c(exclude.vars, fail_non_zero(cv.rawdata, all.vars))
+      exclude.vars <- c(exclude.vars,c("lambert_x","lambert_y"))
+    }
     exclude.vars <- unique(exclude.vars)
     exclude.vars <- exclude.vars[exclude.vars %in% colnames(cv.rawdata)]
     
@@ -409,13 +413,15 @@ PLSnoK.cv <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, manual.cv
 #' @param my.segments Integer; number of segments?
 #' @param regional Boolean indicating whether model is regional.  Defaults to TRUE.
 #' @param kriging Boolean indicating whether to krig residuals.  Defaults to TRUE.
+#' @param clean.data Boolean indicating whether to apply data cleaning functions.  Defaults to TRUE.
 #' @return 
 #' @keywords cross-validation
 #' @export
 #' @examples 
 
 PLSK.cv.alt <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, 
-                    manual.cv=NULL, factr=1e9, verbose=FALSE, my.segments=10, regional=TRUE, kriging=TRUE){
+                    manual.cv=NULL, factr=1e9, verbose=FALSE, my.segments=10, regional=TRUE, kriging=TRUE,
+                    clean.data=TRUE){
   
   # establish CV groups here
   weco.monitors <- poly.int2(weco.polygon, rawdata[, c('longitude','latitude')]) 
@@ -451,9 +457,9 @@ PLSK.cv.alt <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL,
   stopifnot(all(rowSums(cv.mx)==1))  
   
   cv.pred <- rep(NA, l=nrow(rawdata))
-  cv.var <- rep(NA, l=nrow(rawdata))
+  cv.var  <- rep(NA, l=nrow(rawdata))
   names(cv.pred) <- rawdata$native_id
-  names(cv.var) <- rawdata$native_id
+  names(cv.var)  <- rawdata$native_id
   
   parms <- list()
   X <- list()
@@ -473,38 +479,38 @@ PLSK.cv.alt <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL,
     if(kriging){
       if(regional){
         result.temp <- PLSK.full(cv.rawdata, desc.vars, pls.comps, UK.varnames, factr, verbose, regional)
-        model.obj$parms <- result.temp$model.obj$parms
-	  }
+        model.obj <- result.temp$model.obj
+	}
     }else{ #end "if kriging
            # data cleaning needed here?
 	    lmdata <- data.frame(y=model.obj$y, 	as.data.frame(model.obj$X))
 	    lmRHS <- paste0(paste0("V", 1:ncol(model.obj$X),collapse="+"), "-1")
 	    lmformula <- 	as.formula(c("y~", lmRHS ))
-
 	    #model.obj$parms <- lm(model.obj$y~model.obj$X-1)
-	    model.obj$parms <- lm(eval(lmformula), data=lmdata)
-	    parms[[i]] <- model.obj$parms
+	    model.obj  <- lm(eval(lmformula), data=lmdata)
+	    parms[[i]] <- model.obj
     }
 
 
     parms[[i]] <- model.obj$parms
 
     # predict on the leftout group
-    ppts <- make_predict_object(rawdata=rawdata[cv.mx[,i],], model.obj, pls.comps)
-    b.region.vec    <- v.hash[[b.type]](ppts)
-    ppts.region.vec <- v.hash[[v.type]](ppts)
-    modl.region.vec <- v.hash[[v.type]](model.obj)
-    ppts$X          <- b.hash[[b.type]](ppts, b.region.vec, pls.comps)
+    # [result.temp$rawdata$native_id %in% cv.rawdata$native_id[cv.mx[,i]],]
+    ppts <- make_predict_object(rawdata=result.temp$rawdata, model.obj, pls.comps)
+    b.region.vec    <- result.temp$v.hash[[result.temp$b.type]](ppts)
+    ppts.region.vec <- result.temp$v.hash[[result.temp$v.type]](ppts)
+    modl.region.vec <- result.temp$v.hash[[result.temp$v.type]](model.obj)
+    ppts$X          <- result.temp$b.hash[[result.temp$b.type]](ppts, b.region.vec, pls.comps)
 
     X.pred[[i]] <- ppts$X
-    rownames(X.pred[[i]]) <- rawdata[cv.mx[,i],"native_id"]
+    rownames(X.pred[[i]]) <- result.temp$rawdata$native_id
 
     if(kriging){
       mark <- c.exp(model.obj$parms,
                   model.obj$X, model.obj$coords, modl.region.vec, model.obj$y,
                   ppts$X, ppts$coords, ppts.region.vec)
       cv.pred[cv.mx[,i]] <- mark[, 1]
-      cv.var[cv.mx[,i]] <- mark[, 2]
+      cv.var[cv.mx[,i]]  <- mark[, 2]
     }else{
       cv.pred[cv.mx[,i]] <- predict(model.obj$parms, as.data.frame(ppts$X))
     }

@@ -34,11 +34,11 @@ make_predict_object <- function(rawdata, model.obj, pls.comps)
                        center=attr(model.obj$covars.pls, 'scaled:center'),
                        scale=attr(model.obj$covars.pls, 'scaled:scale'))
   ppts$PLS$scores <- predict(model.obj$PLS, newdata=ppts, comps=1:pls.comps, type='scores')  
-  ppts$UK.covars <- as.matrix(rawdata[, colnames(model.obj$UK.covars),drop=FALSE])
-  ppts$monitors <- rawdata$location_id
+  ppts$UK.covars  <- as.matrix(rawdata[, colnames(model.obj$UK.covars),drop=FALSE])
+  ppts$monitors   <- rawdata$location_id
   ppts$obs <- length(ppts$monitors)
   ppts$coords <- rawdata[, c('lambert_x','lambert_y')]/1000
-  ppts$gps <- rawdata[, c('longitude','latitude')]
+  ppts$gps    <- rawdata[, c('longitude','latitude')]
   ppts$weco.monitors <- ppts$monitors[poly.int2(weco.polygon, ppts$gps)]
   ppts$east.monitors <- ppts$monitors[poly.int2(east.polygon, ppts$gps)]
   if (length(c(ppts$weco.monitors, ppts$east.monitors)) == 0)
