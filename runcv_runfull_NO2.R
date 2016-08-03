@@ -37,9 +37,7 @@ vardrop <- c("m_to_truck", "m_to_oil", "m_to_6oil", "m_to_main_cityhall", "m_to_
 
 pollutant <- "NO2" #this is just an input to my dataread function
 
-
 yearparam <- 2010:2014 #input to my dataread function
-
 
 rawdata.l <- lapply(yearparam, DR0119, pollutant=pollutant, vardrop=vardrop, LID_drop=LID_drop,randomsample=NULL)  #read in the data using the data-read function DR0119
 ##the code for this function is in functions_readdata.r
@@ -64,22 +62,20 @@ lapply(rawdata.l, function(.rawdata){
     runcv(pls=2, rawdata=.rawdata, manual.cv=NULL, desc.vars=desc.vars, UK.varnames=NULL)
   })
   
-
-
-
-
-
 #######run full models
 
 NO2test.full <- lapply(rawdata.l, function(.rawdata){
   runfull(pls=2, rawdata=.rawdata, desc.vars=desc.vars, UK.varnames=NULL)
 })
 
-
 ###########Run One CV
 test1 <- runfull(pls=2, rawdata=rawdata.l[[5]], desc.vars=desc.vars, UK.varnames=NULL)
 test2 <- runcv(pls=2, rawdata=rawdata.l[[5]], manual.cv=NULL, desc.vars=desc.vars, UK.varnames=NULL)
 test3 <- PLSK.cv.alt(pls.comps=2, rawdata=rawdata.l[[5]], manual.cv=NULL, desc.vars=desc.vars, UK.varnames=NULL)
+
+plot(test1$model.obj$PLS$loadings)
+parse_loadingtype(test1)
+plot_pls(test1)
 
 
 
