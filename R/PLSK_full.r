@@ -6,7 +6,7 @@
 #' @param rawdata A data.frame of the rawdata.  See rawdata section for details. Failing to supply rawdata will terminate the function call.  
 #' @param desc.vars A vector of ?
 #' @param pls.comps An integer between 1 and 5 indicating the number of PLS components.
-#' @param UK.varnames Defaults to NULL.  This will?
+#' @param UK.varnames Defaults to NULL.  These are covariates to be used in universal kriging.
 #' @param factr Defaults to 1e9.
 #' @param verbose Defaults to FALSE.  This will?
 #' @param regional Defaults to TRUE.  This will?
@@ -100,11 +100,23 @@
 #' @examples
 #' @export
 
-PLSK.full <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, factr=1e9, verbose=FALSE, regional=TRUE, clean.data=TRUE){
+PLSK.full <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, factr=1e9, verbose=FALSE, regional=TRUE, clean.data=TRUE, debug.mode=FALSE){
+
+  # Which variables came in with the raw data
+  invars    <- names(rawdata)
   
-  invars    <- names(rawdata) 
+  # Size of raw dataset 
+  print(paste("dim(rawdata):", dim(rawdata)[1],dim(rawdata)[2]))
+
+  # Stop if there are duplicated locations
+  stopifnot(sum(duplicated(rawdata$location_id))==0)
+
+  # Number of PLS components
   pls.comps <- as.integer(pls.comps)
   if(pls.comps > 5) stop("PLS components must be <= 5. this is hardcoded somewhere. can be changed if necessary")
+  print(paste("n.comps:", pls.comps))
+
+  # Pollutant and year of model
   pollutant <- attr(rawdata, "pollutant")
   year      <- attr(rawdata, "year")
   if(is.null(pollutant) | is.null(year)){
@@ -113,10 +125,10 @@ PLSK.full <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, factr=1e9
 		they will be stored for later reference in the model object as object$pollutant, object$year"
 	)
   }
-  print(paste("n.comps:", pls.comps))
-  print(paste("dim(rawdata):", dim(rawdata)[1],dim(rawdata)[2]))
 
-  stopifnot(sum(duplicated(rawdata$location_id))==0)
+  # Descriptive variables to retain
+  desc.vars <- union(desc.vars, 
+                   c('pollutant_conc','location_id','native_id','latitude','longitude', 'monitor_type'))
 
   # Data pre-processing
   rawdata <- as.data.table(rawdata)
@@ -132,13 +144,9 @@ PLSK.full <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, factr=1e9
   rawdata <- log_transform_distances_dt(rawdata, desc.vars=desc.vars)
   rawdata <- combine_a23_ll_dt(rawdata,desc.vars=desc.vars)
   rawdata <- as.data.frame(rawdata)
-
-  desc.vars <- union(desc.vars, 
-     c('pollutant_conc','location_id','native_id','latitude','longitude', 'monitor_type')
-  )
-   
+  
   # Variable screening
-  all.vars <- colnames(rawdata)[! colnames(rawdata) %in% desc.vars]
+  all.vars     <- colnames(rawdata)[! colnames(rawdata) %in% desc.vars]
   exclude.vars <- desc.vars
   if (clean.data){
     exclude.vars <- c(exclude.vars, fail_quantile_check(rawdata, all.vars))
@@ -148,18 +156,18 @@ PLSK.full <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, factr=1e9
     exclude.vars <- c(exclude.vars,c("lambert_x","lambert_y"))
   }
   exclude.vars <- unique(exclude.vars)
+  if (debug.mode){ print(exclude.vars) }
   exclude.vars <- exclude.vars[exclude.vars %in% colnames(rawdata)]
-
- 
-  ## END DATA CLEANING ##
 
   if(!is.null(UK.varnames)) if(any(UK.varnames %in% exclude.vars)){
 	stop("variable/s ", instersect(UK.varnames,exclude.vars), " have been excluded, probably due to failing cleaning checks")
   }
+ 
+  ## END DATA CLEANING ##
+
 
   # create national R object out of rawdata object
   model.obj <- make_modeling_object(rawdata, exclude.vars=exclude.vars, UK.varnames=UK.varnames)
-
 
   # set up the design matrix and region vector hashes
   b.hash <- list(make_reg_design, make_nat_design)
@@ -177,12 +185,16 @@ PLSK.full <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, factr=1e9
       b.type <- 'nat'
       v.type <- 'nat'
     }
-  #### NOTE Why is this v.hash rather than b.hash?
+  #### Region vectors
   b.region.vec <- v.hash[[b.type]](model.obj)
-  region.vec <- v.hash[[v.type]](model.obj)
+  region.vec   <- v.hash[[v.type]](model.obj)
   
-  model.obj$X <- b.hash[[b.type]](my.object=model.obj, region.vector=b.region.vec, my.pls.comps=pls.comps) #generally make_reg_design(model.obj, b.region.vec, pls.comps)
+  # Design matrix
+  # Generally make_reg_design(model.obj, b.region.vec, pls.comps)
+  model.obj$X <- b.hash[[b.type]](my.object=model.obj, region.vector=b.region.vec, my.pls.comps=pls.comps) 
   rownames(model.obj$X) <- model.obj$monitors
+
+  # Workhorse
   ini.l.pars <- c(0, log(.1), log(750), 0, log(.1), log(10), 0, log(.1), log(60))
   model.obj$parms <- my.likfit(ini.l.pars = ini.l.pars[1:(3*length(unique(region.vec)))],
                                X = model.obj$X,
@@ -193,11 +205,11 @@ PLSK.full <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, factr=1e9
 					 factr=factr)
   if(regional){
     rownames(model.obj$parms$beta) <-    c("east_intercept",
-      paste("east_b",c(1:pls.comps,UK.varnames), sep=''), 
+      paste("east_b", c(1:pls.comps,UK.varnames), sep=''), 
       "weco_intercept",
-      paste("weco_b",c(1:pls.comps,UK.varnames), sep=''),
+      paste("weco_b", c(1:pls.comps,UK.varnames), sep=''),
       "west_intercept",
-      paste("west_b",c(1:pls.comps,UK.varnames), sep=''))
+      paste("west_b", c(1:pls.comps,UK.varnames), sep=''))
     
     names(model.obj$parms$log.cov.pars) <- c('east_tau',
                                            'east_sigma',

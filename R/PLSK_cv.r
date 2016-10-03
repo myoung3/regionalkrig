@@ -31,6 +31,7 @@ PLSK.cv <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL,
                     clean.data=TRUE){
   invars <- names(rawdata)
   pls.comps <-   as.integer(pls.comps)
+  if(pls.comps > 5) stop("PLS components must be <= 5. this is hardcoded somewhere. can be changed if necessary")
   pollutant <- attr(rawdata, "pollutant")
   year <- attr(rawdata, "year")
   if(is.null(pollutant) | is.null(year)){
@@ -53,6 +54,9 @@ PLSK.cv <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL,
     cat("rawdata contains", sum(as.logical(colSums(miss))), "columns with missing values.\n")
     stop("remove missing columns or rows prior to modeling")
   }
+
+  ## DATA CLEANING ##
+  
   rawdata <- log_transform_distances_dt(rawdata, desc.vars=desc.vars)
   rawdata <- combine_a23_ll_dt(rawdata,desc.vars=desc.vars)
   rawdata <- as.data.frame(rawdata)
@@ -478,7 +482,7 @@ PLSK.cv.alt <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL,
    
     if(kriging){
       if(regional){
-        result.temp <- PLSK.full(cv.rawdata, desc.vars, pls.comps, UK.varnames, factr, verbose, regional)
+        result.temp <- PLSK.full(cv.rawdata, desc.vars, pls.comps, UK.varnames, factr, verbose, regional, clean.data)
         model.obj <- result.temp$model.obj
 	}
     }else{ #end "if kriging
@@ -494,7 +498,7 @@ PLSK.cv.alt <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL,
 
     parms[[i]] <- model.obj$parms
 
-    # predict on the leftout group
+    # Predict on the leftout group
     # [result.temp$rawdata$native_id %in% cv.rawdata$native_id[cv.mx[,i]],]
     ppts <- make_predict_object(rawdata=result.temp$rawdata, model.obj, pls.comps)
     b.region.vec    <- result.temp$v.hash[[result.temp$b.type]](ppts)
@@ -525,6 +529,69 @@ PLSK.cv.alt <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL,
 
 
 
+PLSK.cv.alt <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, 
+                    manual.cv=NULL, factr=1e9, verbose=FALSE, my.segments=10, regional=TRUE, kriging=TRUE,
+                    clean.data=TRUE){
 
+  # establish CV groups here
+  weco.monitors <- poly.int2(weco.polygon, rawdata[, c('longitude','latitude')]) 
+  east.monitors <- poly.int2(east.polygon, rawdata[, c('longitude','latitude')])
+  west.monitors <- !east.monitors & !weco.monitors
 
+  ###NOTE:one group can be entirely in one region but one region can't be made up of one group
+  ###(if one region was made of one group,
+  ###there would be no way to predict to that region when that group is left out)
+
+  if(is.null(manual.cv)){
+    cv.mx <- matrix(FALSE, nrow=nrow(rawdata), ncol=10)
+    for (mons in list(weco.monitors, west.monitors, east.monitors)){
+      obs <- sum(mons)
+      cv.groups <- trunc(my.segments * 1:obs / (obs+1)) + 1
+      cv.groups <- cv.groups[order(runif(obs, 0, 1))]
+      for (i in 1:my.segments){
+        cv.mx[which(mons)[cv.groups == i], i] = TRUE  #changed from grep(TRUE,mons) to which(mons) for readability
+								    #pretty sure this could actually be written as mons & cv.groups==i
+	}
+    }
+  }else{
+    my.segments <- length(unique(manual.cv))
+    cv.mx <- matrix(FALSE, nrow=nrow(rawdata), ncol=my.segments)
+    for(i in 1:my.segments){
+      cv.mx[manual.cv==i,i] <- TRUE
+    }
+    for (mons in list(weco.monitors, west.monitors, east.monitors)){
+	stopifnot(sum(as.logical(colSums(cv.mx[mons,])))>1) ##check to see that every region contains multiple groups
+    }
+  }
+  
+  stopifnot(all(rowSums(cv.mx)==1))  
+  
+  cv.pred <- rep(NA, l=nrow(rawdata))
+  cv.var  <- rep(NA, l=nrow(rawdata))
+  cv.lur  <- rep(NA, l=nrow(rawdata))
+  names(cv.pred) <- rawdata$native_id
+  names(cv.var)  <- rawdata$native_id
+  names(cv.lur)  <- rawdata$native_id
+
+  parms <- list()
+  X <- list()
+  X.pred <- list()
+ 
+  for (i in 1:my.segments)
+  {
+    print (i)
+    #
+    # prune out variables
+    cv.rawdata <- rawdata[!cv.mx[,i],] 
+    #cv.rawdata is the "90%" sample
+
+    if(verbose){print(paste("dim(cv.rawdata):", dim(cv.rawdata)[1],dim(cv.rawdata)[2]))}
+    result.temp <- PLSK.full(cv.rawdata, desc.vars, pls.comps, UK.varnames, factr, verbose, regional, clean.data)
+    pred.temp   <- PLSK.predict(result.temp, rawdata[cv.mx[,i],], desc.vars=desc.vars)
+    cv.pred[rownames(pred.temp)] <- pred.temp$pred_modelingscale
+    cv.var[rownames(pred.temp)]  <- pred.temp$var
+    cv.lur[rownames(pred.temp)]  <- pred.temp$LUR.pred
+  }   
+  as.list(environment())
+}
 

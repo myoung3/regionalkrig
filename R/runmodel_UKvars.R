@@ -20,7 +20,11 @@ runcv <- function(pls, UK.varnames, rawdata=NULL,desc.vars, factr=1e10, manual.c
 	PLSK.cv(rawdata=rawdata,desc.vars, pls.comps=pls,UK.varnames=UK.varnames, factr=factr,verbose=TRUE,manual.cv=manual.cv, ...)
 }
 
+runcv.alt <- function(pls, UK.varnames, rawdata=NULL,desc.vars, factr=1e10, manual.cv=NULL,...){
 
+	if(is.null(rawdata)){	stop("DRfunction deprecated.  specify rawdata")}
+	PLSK.cv.alt(rawdata=rawdata,desc.vars, pls.comps=pls,UK.varnames=UK.varnames, factr=factr,verbose=TRUE,manual.cv=manual.cv, ...)
+}
 
 #' Wrapper Function for Running a Full Model
 #'

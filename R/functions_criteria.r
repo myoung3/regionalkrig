@@ -140,6 +140,14 @@ log_transform_distances_dt <- function(my.data.table, desc.vars, dist.search = "
 
 }
 
+#' Backtransformation of Log Names
+#'
+#' A function that renames variables to remove the 'log10' prefix
+#' @param x A string vector of column names
+#' @return String vector with names transformed 
+#' @keywords 
+#' @export
+#' @examples 
 
 backtransform_lognames <- function(x){
 	transformed <- grep("log10", x, v=TRUE)
@@ -157,6 +165,15 @@ backtransform_lognames <- function(x){
 # covariates for a2 and a3 roads in buffers   #
 #=============================================#
 
+#' Combine A2 and A3 line length
+#'
+#' A function that sums the line lengths of A2 and A3 roads into a single variable
+#' @param my.data.table A matrix of geocovariates
+#' @param desc.vars Descriptive variables to be retained - not subject to cleaning/exclusion
+#' @return A matrix that appends the new variables (one for each buffer size)
+#' @keywords 
+#' @export
+#' @examples 
 
 combine_a23_ll_dt <- function(my.data.table, desc.vars)
 {
@@ -179,6 +196,15 @@ combine_a23_ll_dt <- function(my.data.table, desc.vars)
   return(my.data.table)
 }
 
+#' Backtransformation of line length names
+#'
+#' Backtransformation of line length names
+#' @param x String vector of geocovariate names
+#' @return String vector backtransformed names
+#' @keywords 
+#' @export
+#' @examples 
+
 
 backtransform_llnames <- function(x){
 	transformed <- grep("ll_a23", x, v=TRUE)
@@ -194,6 +220,16 @@ backtransform_llnames <- function(x){
 #=============================================#
 # Data cleaning                               #
 #=============================================#
+
+#' Data Cleaning
+#'
+#' A function that transforms distances, combines A2 and A3 line lengths, and then applies exclusion criteria
+#' @param my.data See rawdata under PLSK.full
+#' @param desc.vars Descriptive variables to be retained - not subject to cleaning/exclusion
+#' @return A list containing a rawdata object and a list of variables that were excluded
+#' @keywords 
+#' @export
+#' @examples 
 
 clean_data <- function(my.data, desc.vars){
   my.data <- log_transform_distances_dt(my.data, desc.vars=desc.vars)

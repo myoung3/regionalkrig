@@ -18,7 +18,7 @@ load_all()
 
 
 DR0119 <- init.dr(reqnum = "DR0119", poll_list="NO2") #generate a function that reads in DR0119
-DR0119 <- init.dr(reqnum = "dr0250", poll_list="NO2", dataloc = "Q:/eac_database/requests/") #generate a function that reads in DR0119
+DR0119 <- init.dr(reqnum = "dr0250", poll_list="PM25", dataloc = "Q:/eac_database/requests/") #generate a function that reads in DR0119
 #why not just read in DR0119? This is more efficient:
 #it reads in the dataset once, stores the data in the environment of the DR0119 function
 #then DR0119 alows you to select subsets of that dataset without rereading it each time
@@ -35,7 +35,7 @@ vardrop <- c("m_to_truck", "m_to_oil", "m_to_6oil", "m_to_main_cityhall", "m_to_
 #remove these variables from the dataset if you have them. we don't model with them
 #m_to_truck has had distance problems in some states, the oil and cityhall variables are not available everythwer, satellite_NO2 is the variable given to us by marshall et al
 
-pollutant <- "NO2" #this is just an input to my dataread function
+pollutant <- "PM25" #this is just an input to my dataread function
 
 yearparam <- 2010:2014 #input to my dataread function
 
@@ -69,13 +69,5 @@ NO2test.full <- lapply(rawdata.l, function(.rawdata){
 })
 
 ###########Run One CV
-test1 <- runfull(pls=2, rawdata=rawdata.l[[5]], desc.vars=desc.vars, UK.varnames=NULL)
-test2 <- runcv(pls=2, rawdata=rawdata.l[[5]], manual.cv=NULL, desc.vars=desc.vars, UK.varnames=NULL)
-test3 <- PLSK.cv.alt(pls.comps=2, rawdata=rawdata.l[[5]], manual.cv=NULL, desc.vars=desc.vars, UK.varnames=NULL)
-
-plot(test1$model.obj$PLS$loadings)
-parse_loadingtype(test1)
-plot_pls(test1)
-
-
+test1.2010 <- runfull(pls=2, rawdata=rawdata.l[[1]], desc.vars=desc.vars, UK.varnames=NULL)
 
