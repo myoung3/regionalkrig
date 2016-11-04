@@ -46,6 +46,7 @@
 #'   \item{clean.data}{logical indicator, 1 = do data cleaning, 0 = data cleaning already done}
 #' }
 #' @keywords 
+#' @importFrom stats predict
 #' @export
 #' @examples 
 
@@ -150,11 +151,14 @@ PLSK.predict <- function(model, rawdata, desc.vars, debug.mode=FALSE){
       regions.missing  <- all.regions[!(all.regions %in% unique(b.region.vec))]
 
       # Conditional expectation - i.e. prediction
-      mark <- c.exp(model$model.obj$parms,
-                  model$model.obj$X, model$model.obj$coords, model.region.vec, model$model.obj$y,
-                  fill_X(ppts$X, regions.missing, pls.comps=model$pls.comps, uk.vars=length(model$UK.varnames)),
-                  fill_coords(ppts$coords, regions.missing),
-                  fill_regional_vector(ppts.region.vec, regions.missing))
+      mark <- predict(model$model.obj$parms,
+                  X.mon=model$model.obj$X, 
+                  coords.mon=model$model.obj$coords,
+                  reg.mon=model.region.vec,
+                  y=model$model.obj$y,
+                  X.pred=fill_X(ppts$X, regions.missing, pls.comps=model$pls.comps, uk.vars=length(model$UK.varnames)),
+                  coords.pred=fill_coords(ppts$coords, regions.missing),
+                  reg.pred=fill_regional_vector(ppts.region.vec, regions.missing))
       if(!identical(ppts.region.vec, b.region.vec)){
 	  warn("mark defined ppts.region.vec and b.region.vec differently according to v.type versus b.type\n
 	        I'm not sure if this was intentional--check into this")
