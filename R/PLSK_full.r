@@ -97,6 +97,7 @@
 #'   \item{Hard-coded region parameters}{Re-work for flexible regions}
 #' }
 #' @keywords 
+#' @importFrom ruk rlikfit
 #' @examples
 #' @export
 
@@ -196,13 +197,14 @@ PLSK.full <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, factr=1e9
 
   # Workhorse
   ini.l.pars <- c(0, log(.1), log(750), 0, log(.1), log(10), 0, log(.1), log(60))
-  model.obj$parms <- my.likfit(ini.l.pars = ini.l.pars[1:(3*length(unique(region.vec)))],
-                               X = model.obj$X,
-                               coords = model.obj$coords,
-                               reg.ind = region.vec,
+  model.obj$parms <- rlikfit(y=model.obj$y,
+  								X=model.obj$X,
+  								coords=model.obj$coords,
+  								reg.ind=region.vec,
+  								init.pars= ini.l.pars[1:(3*length(unique(region.vec)))],
                                data = model.obj$y,
-					 trace=verbose,
-					 factr=factr)
+                               optim.args=list(control=list(trace= verbose,factr=factr)))
+				
   if(regional){
     rownames(model.obj$parms$beta) <-    c("east_intercept",
       paste("east_b", c(1:pls.comps,UK.varnames), sep=''), 
