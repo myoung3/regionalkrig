@@ -24,6 +24,8 @@
 #' }
 #' @keywords cross-validation
 #' @export
+#' @importFrom ruk rlikfit
+#' @importFrom stats predict
 #' @examples 
 
 PLSK.cv <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL, 
@@ -160,11 +162,12 @@ PLSK.cv <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL,
     
     if(kriging){
       ini.l.pars <- c(0, log(.1), log(750), 0, log(.1), log(10), 0, log(.1), log(60))
-      model.obj$parms <- my.likfit(ini.l.pars = ini.l.pars[1:(3*length(unique(region.vec)))],
+      model.obj$parms <- rlikfit(init.pars = ini.l.pars[1:(3*length(unique(region.vec)))],
   		X = model.obj$X,
 		coords = model.obj$coords,
  		reg.ind = region.vec,
-		data = model.obj$y,trace=verbose,factr=factr)
+		y = model.obj$y,
+        optim.args=list(control=list(trace= verbose,factr=factr)))
 
       if(regional){
 	  rownames(model.obj$parms$beta) <-    c("east_intercept",
@@ -210,9 +213,10 @@ PLSK.cv <- function(rawdata, desc.vars, pls.comps, UK.varnames=NULL,
     rownames(X.pred[[i]]) <- rawdata[cv.mx[,i],"native_id"]
 
     if(kriging){
-      mark <- c.exp(model.obj$parms,
-                  model.obj$X, model.obj$coords, modl.region.vec, model.obj$y,
-                  ppts$X, ppts$coords, ppts.region.vec)
+      mark <- predict.rlikfit(object=model.obj$parms,
+                  X.mon=model.obj$X, coords.mon=model.obj$coords, 
+                  reg.mon=modl.region.vec, y=model.obj$y,
+                  X.pred=ppts$X, coords.pred=ppts$coords, reg.pred=ppts.region.vec)
       cv.pred[cv.mx[,i]] <- mark[, 1]
       cv.var[cv.mx[,i]] <- mark[, 2]
     }else{

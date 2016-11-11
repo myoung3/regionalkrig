@@ -39,10 +39,14 @@ PLSK.predict.nonbatch <- function(model, rawdata,desc.vars, debug.mode=TRUE){
     }
 
 
-    mark <- c.exp(likfit.obj=model$model.obj$parms,
-                   X.mon=model$model.obj$X, coords.mon=model$model.obj$coords,
-			reg.mon=model.region.vec, y=model$model.obj$y,
-                  X.pred=ppts$X, coords.pred=ppts$coords, reg.pred=ppts.region.vec)
+    mark <- predict(likfit.obj=model$model.obj$parms,
+                   X.mon=model$model.obj$X,
+                   coords.mon=model$model.obj$coords,
+					reg.mon=model.region.vec,
+					y=model$model.obj$y,
+                  	X.pred=ppts$X,
+                  	coords.pred=ppts$coords,
+                  	reg.pred=ppts.region.vec)
   my.rawdata_pred <- matrix(NA, ncol=4, nrow=nrow(rawdata))
   rownames(my.rawdata_pred) <- rawdata$native_id
   my.rawdata_pred[, 1:2] <- mark
