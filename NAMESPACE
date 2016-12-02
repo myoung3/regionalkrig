@@ -32,3 +32,6 @@ export(runcv)
 export(runfull)
 importFrom(ruk,rlikfit)
 importFrom(stats,predict)
+
+exportPattern("^[^\\.]")
+import(data.table) 

@@ -1,5 +1,6 @@
 #setwd("C:/Users/micha/Documents/git/regionalkrig")
-#setwd("C:\\LocalDataAmanda\\git_repo\\regionalkrig")
+setwd("C:\\LocalDataAmanda\\git_repo\\regionalkrig")
+#library(data.table)
 
 #install.packages(c("SpatioTemporal","corpcor","data.table","geoR","maps","mvtnorm","pls","deldir","ggplot2","mapproj", "devtools","roxygen2"))
 
@@ -15,10 +16,15 @@ assign('east.polygon', east.polygon, envir=.GlobalEnv)
 library(devtools)
 load_all()
 
+setwd("C:\\LocalDataAmanda\\git_repo")
+load_all(pkg = "ruk")
+
+setwd("C:\\LocalDataAmanda\\git_repo\\regionalkrig")
 
 
-DR0119 <- init.dr(reqnum = "DR0119", poll_list="NO2") #generate a function that reads in DR0119
-DR0119 <- init.dr(reqnum = "dr0250", poll_list="PM25", dataloc = "Q:/eac_database/requests/") #generate a function that reads in DR0119
+
+DR0119 <- init.dr(reqnum = "DR0119", poll_list="PM25") #generate a function that reads in DR0119
+DR0119 <- init.dr(reqnum = "dr0250", poll_list="NO2", dataloc = "Q:/eac_database/requests/") #generate a function that reads in DR0119
 #why not just read in DR0119? This is more efficient:
 #it reads in the dataset once, stores the data in the environment of the DR0119 function
 #then DR0119 alows you to select subsets of that dataset without rereading it each time
@@ -31,11 +37,11 @@ DR0119 <- init.dr(reqnum = "dr0250", poll_list="PM25", dataloc = "Q:/eac_databas
 randomsample <- .3 #this is just for my data-read function. it can take a random subset of the dataset. NULL is the full dataset or a value between 0 and 1. .5 is a 50% sample
 desc.vars <- c('county','state','state_plane', 'lambert_x','lambert_y')
 LID_drop=c("318638" , "318637", "2287")  ###these locations have been problematic (ie, missing covariates) in the past
-vardrop <- c("m_to_truck", "m_to_oil", "m_to_6oil", "m_to_main_cityhall", "m_to_local_cityhall", "satellite_NO2")    
+vardrop <- c("m_to_truck", "m_to_oil", "m_to_6oil", "m_to_main_cityhall", "m_to_local_cityhall", "satellite_NO2","no2_behr_2005","no2_behr_2007")    
 #remove these variables from the dataset if you have them. we don't model with them
 #m_to_truck has had distance problems in some states, the oil and cityhall variables are not available everythwer, satellite_NO2 is the variable given to us by marshall et al
 
-pollutant <- "PM25" #this is just an input to my dataread function
+pollutant <- "NO2" #this is just an input to my dataread function
 
 yearparam <- 2010:2014 #input to my dataread function
 

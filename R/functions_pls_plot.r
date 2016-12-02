@@ -13,8 +13,9 @@ library(reshape2)
 #' @export
 #' @examples 
 
-parse_loadingtype <- function(x){ 
-  new.x         <- x$model.obj$PLS$loadings[,1:2]
+parse_loadingtype <- function(x, n=2){
+  n <- max(n, 2) 
+  new.x         <- x$model.obj$PLS$loadings[,1:n]
   out <- data.table(x = new.x, type = rep(as.character(NA), dim(new.x)[1]), subtype = rep(as.character(NA), dim(new.x)[1]))
   out$varname <- rownames(new.x)
   level.order <- rev(c("roadway proximity", 
@@ -50,6 +51,7 @@ parse_loadingtype <- function(x){
   out$type <- factor(out$type, levels = level.order)
   stopifnot(sum(is.na(out$type))==0)
   setkey(out, "varname")
+  names(out) <- c(paste("Comp",1:n, sep=""),"type","subtype","varname")
   out
 }
 
@@ -65,9 +67,9 @@ parse_loadingtype <- function(x){
 #' @export
 #' @examples 
 
-plot_pls <- function(x, ...){
-  loadings_yrs  <- parse_loadingtype(x)
-  names(loadings_yrs) <- c("Comp1","Comp2","type","subtype","varname")
+plot_pls <- function(x, n=1, ...){
+  loadings_yrs  <- parse_loadingtype(x, n)
+#  names(loadings_yrs) <- c("Comp1","Comp2","type","subtype","varname")
 
   num.vars <- length(levels(loadings_yrs$type))
   pt.label <- levels(loadings_yrs$type)
@@ -77,14 +79,14 @@ plot_pls <- function(x, ...){
   dev.new(height = 6, width = 7.5)
   par(mar=c(5,15,4,2))
   
-  set.ticks <- nice_x_axis(loadings_yrs$Comp1)
+  set.ticks <- nice_x_axis(loadings_yrs[, n, with=FALSE])
   plot(dummyy~dummyx, axes = FALSE, frame.plot=TRUE, type="n", ylab = "", ...)
   axis(2, las = 2, labels = pt.label, at=c(1:num.vars))
   axis(1, las = 2, labels = set.ticks, at=set.ticks)
 
   j<-1
   for (i in c(1:num.vars)){
-    current <- loadings_yrs$Comp1[loadings_yrs$type == levels(loadings_yrs$type)[i]]
+    current <- unlist(loadings_yrs[loadings_yrs$type == levels(loadings_yrs$type)[i], n, with=FALSE])
     points(current,rep(i, length(current)) )
     j <-  j+1
   }
