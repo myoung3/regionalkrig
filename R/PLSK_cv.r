@@ -24,7 +24,7 @@
 #' }
 #' @keywords cross-validation
 #' @export
-#' @importFrom ruk rlikfit
+#' @importFrom ruk rlikfit predict.rlikfit
 #' @importFrom stats predict
 #' @examples 
 
