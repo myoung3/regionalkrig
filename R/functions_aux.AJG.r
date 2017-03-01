@@ -1,3 +1,11 @@
+#' Function to Calculate Cross-Validated R2
+#'
+#' A function to calculate cross-validated R2
+#' @param cv.result
+#' @keywords cross-validation R2
+#' @export
+#' @examples 
+
 PLSK.cv.r2 <- function(cv.result){
   obs <- cv.result$cv.rawdata[,c("native_id","pollutant_conc")]
   names(obs) <- c("native_id","y_obs")
@@ -6,6 +14,16 @@ PLSK.cv.r2 <- function(cv.result){
   temp <- merge(obs, pred, by="native_id")
   cv.r2(temp$y_obs, temp$y_pred*temp$y_pred)
 }
+
+#' Cross-Validation Plot
+#'
+#' Plot of predictions for out-of-sample locations from cross-validation models
+#' against observations.
+#' @param cv.result
+#' @param ... plotting parameters
+#' @keywords cross-validation
+#' @export
+#' @examples 
 
 cv.plot <- function(cv.result, ...){
   obs <- cv.result$cv.rawdata[,c("native_id","pollutant_conc")]
@@ -37,6 +55,16 @@ cv.plot <- function(cv.result, ...){
   print(cv.r2(temp$y_obs, temp$lur))
 }
 
+#' Prediction Plot
+#'
+#' Plot of predictions against observations.
+#' @param full.model
+#' @param rawdata
+#' @param ... plotting parameters
+#' @keywords prediction
+#' @export
+#' @examples 
+
 pred.plot <- function(full.model, rawdata=full.model$rawdata, ...){
   preds <- PLSK.predict(full.model, rawdata, desc.vars=c("county","state","state_plane","lambert_x","lambert_y"))
 
@@ -53,6 +81,15 @@ pred.plot <- function(full.model, rawdata=full.model$rawdata, ...){
        ylim=range(c(temp$y_obs, temp$y_pred), na.rm=TRUE), ...)
   abline(0,1,col="gray")
 }
+
+#' R2 utility function
+#'
+#' Returns lm, R2, and RMSE for 2 vectors
+#' @param x numeric column
+#' @param y numeric column
+#' @keywords R2 RMSE
+#' @export
+#' @examples 
 
 cv.r2 <- function(x, y){
   xy.linear <- lm(y~x)
